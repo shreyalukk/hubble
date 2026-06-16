@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Hash, Settings, Users, Phone } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { use } from "react";
 
 const channels = [
   { id: "general", name: "general", type: "text" },
@@ -18,8 +19,9 @@ const members = [
   { id: 3, name: "Charlie Davis", role: "member", status: "online" },
 ];
 
-export default function HubLayout({ children, params }: { children: React.ReactNode, params: { hubId: string } }) {
+export default function HubLayout({ children, params }: { children: React.ReactNode, params: Promise<{ hubId: string }> }) {
   const pathname = usePathname();
+  const { hubId } = use(params);
 
   return (
     <div className="flex h-full border border-white/10 rounded-xl overflow-hidden bg-background">
@@ -40,7 +42,7 @@ export default function HubLayout({ children, params }: { children: React.ReactN
             return (
               <Link 
                 key={ch.id} 
-                href={`/hubs/${params.hubId}/channels/${ch.id}`}
+                href={`/hubs/${hubId}/channels/${ch.id}`}
                 className={cn(
                   "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm font-medium transition-colors",
                   isActive ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
