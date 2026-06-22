@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Hash, Send, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,19 +15,20 @@ interface Message {
 }
 
 const dummyMessages: Message[] = [
-  { id: 1, user: "Alice Johnson", avatar: "bg-primary/20", content: "Hey everyone! Welcome to the CS 101 Study Group.", timestamp: "10:00 AM" },
-  { id: 2, user: "Charlie Davis", avatar: "bg-blue-500/20", content: "Thanks Alice. Has anyone started on the first assignment?", timestamp: "10:05 AM" },
-  { id: 3, user: "Bob Smith", avatar: "bg-green-500/20", content: "Not yet, I plan to start tonight. We should do a voice call later.", timestamp: "10:12 AM" },
+  { id: 1, user: "Aarav Patel", avatar: "bg-primary/20", content: "Hey everyone! Welcome to the CS 101 Study Group.", timestamp: "10:00 AM" },
+  { id: 2, user: "Priya Singh", avatar: "bg-blue-500/20", content: "Thanks Aarav. Has anyone started on the first assignment?", timestamp: "10:05 AM" },
+  { id: 3, user: "Rohan Sharma", avatar: "bg-green-500/20", content: "Not yet, I plan to start tonight. We should do a voice call later.", timestamp: "10:12 AM" },
 ];
 
-export default function ChannelPage({ params }: { params: { hubId: string, channelId: string } }) {
+export default function ChannelPage({ params }: { params: Promise<{ hubId: string, channelId: string }> }) {
+  const unwrappedParams = use(params);
   const [messages, setMessages] = useState<Message[]>(dummyMessages);
   const [newMessage, setNewMessage] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
     // Setup Supabase Realtime Subscription for Live Messaging
-    const channel = supabase.channel(`public:messages:channel_id=${params.channelId}`)
+    const channel = supabase.channel(`public:messages:channel_id=${unwrappedParams.channelId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -48,7 +49,7 @@ export default function ChannelPage({ params }: { params: { hubId: string, chann
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [params.channelId, supabase]);
+  }, [unwrappedParams.channelId, supabase]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +72,7 @@ export default function ChannelPage({ params }: { params: { hubId: string, chann
       {/* Channel Header */}
       <div className="h-14 flex items-center px-4 border-b border-white/10 shrink-0 bg-zinc-950/80 backdrop-blur-md z-10">
         <Hash className="size-5 text-muted-foreground mr-2" />
-        <h3 className="font-bold">{params.channelId}</h3>
+        <h3 className="font-bold">{unwrappedParams.channelId}</h3>
       </div>
 
       {/* Messages Area */}
@@ -81,8 +82,8 @@ export default function ChannelPage({ params }: { params: { hubId: string, chann
           <div className="size-16 rounded-full bg-primary/20 flex items-center justify-center mb-4">
             <Hash className="size-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Welcome to #{params.channelId}!</h1>
-          <p className="text-muted-foreground">This is the start of the #{params.channelId} channel.</p>
+          <h1 className="text-3xl font-bold mb-2">Welcome to #{unwrappedParams.channelId}!</h1>
+          <p className="text-muted-foreground">This is the start of the #{unwrappedParams.channelId} channel.</p>
         </div>
 
         {/* Chat Bubbles */}
@@ -109,7 +110,7 @@ export default function ChannelPage({ params }: { params: { hubId: string, chann
           <Input 
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={`Message #${params.channelId}`}
+            placeholder={`Message #${unwrappedParams.channelId}`}
             className="pl-12 pr-12 py-6 bg-white/5 border-white/10 rounded-xl focus-visible:ring-1 focus-visible:ring-primary/50 text-base"
           />
           <Button type="submit" size="icon" disabled={!newMessage.trim()} className="absolute right-2 size-8 bg-primary text-primary-foreground hover:bg-primary/90">

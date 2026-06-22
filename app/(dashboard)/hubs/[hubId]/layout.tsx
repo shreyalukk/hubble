@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
 import { Hash, Settings, Users, Phone } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -13,12 +14,13 @@ const channels = [
 ];
 
 const members = [
-  { id: 1, name: "Alice Johnson", role: "admin", status: "online" },
-  { id: 2, name: "Bob Smith", role: "member", status: "offline" },
-  { id: 3, name: "Charlie Davis", role: "member", status: "online" },
+  { id: 1, name: "Aarav Patel", role: "admin", status: "online" },
+  { id: 2, name: "Rohan Sharma", role: "member", status: "offline" },
+  { id: 3, name: "Priya Singh", role: "member", status: "online" },
 ];
 
-export default function HubLayout({ children, params }: { children: React.ReactNode, params: { hubId: string } }) {
+export default function HubLayout({ children, params }: { children: React.ReactNode, params: Promise<{ hubId: string }> }) {
+  const unwrappedParams = use(params);
   const pathname = usePathname();
 
   return (
@@ -40,7 +42,7 @@ export default function HubLayout({ children, params }: { children: React.ReactN
             return (
               <Link 
                 key={ch.id} 
-                href={`/hubs/${params.hubId}/channels/${ch.id}`}
+                href={`/hubs/${unwrappedParams.hubId}/channels/${ch.id}`}
                 className={cn(
                   "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm font-medium transition-colors",
                   isActive ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"

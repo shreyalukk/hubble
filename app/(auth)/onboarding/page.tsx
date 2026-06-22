@@ -15,21 +15,20 @@ import {
 /* ───────── Data ───────── */
 
 const COLLEGES = [
-  "Stanford University",
-  "MIT",
-  "Harvard University",
-  "UC Berkeley",
-  "IIT Bombay",
-  "IIT Delhi",
-  "NIT Trichy",
-  "BITS Pilani",
-  "VIT Vellore",
-  "SRM University",
-  "Manipal Institute of Technology",
-  "Delhi University",
-  "Anna University",
-  "Amity University",
-  "Christ University",
+  "RV College of Engineering, Bangalore",
+  "PES University, Bangalore",
+  "BMS College of Engineering, Bangalore",
+  "M.S. Ramaiah Institute of Technology, Bangalore",
+  "NITK Surathkal",
+  "Manipal Institute of Technology, Manipal",
+  "Christ University, Bangalore",
+  "Jain University, Bangalore",
+  "KLE Technological University, Hubli",
+  "Nitte Meenakshi Institute of Technology, Bangalore",
+  "Dayananda Sagar College of Engineering, Bangalore",
+  "New Horizon College of Engineering, Bangalore",
+  "Siddaganga Institute of Technology, Tumkur",
+  "B.M.S. Institute of Technology, Bangalore"
 ];
 
 const STUDENT_DEPARTMENTS = [
