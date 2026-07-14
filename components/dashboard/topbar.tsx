@@ -36,6 +36,7 @@ export function Topbar() {
 
           {/* Search */}
           <button
+            onClick={() => alert("Search feature coming soon!")}
             className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-[#FAF6F0]"
             style={{ color: "#6b7280" }}
           >
@@ -44,6 +45,7 @@ export function Topbar() {
 
           {/* Notifications */}
           <button
+            onClick={() => alert("No new notifications")}
             className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-[#FAF6F0]"
             style={{ color: "#6b7280" }}
           >
@@ -58,7 +60,7 @@ export function Topbar() {
           <div className="h-6 w-px hidden md:block" style={{ backgroundColor: "#E8DDD0" }} />
 
           {/* Profile */}
-          <div className="flex items-center gap-2.5 cursor-pointer group">
+          <Link href="/settings" className="flex items-center gap-2.5 cursor-pointer group hover:opacity-80 transition-opacity">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
               style={{ backgroundColor: "#F5C542" }}
@@ -69,7 +71,7 @@ export function Topbar() {
               <span className="text-sm font-medium" style={{ color: "#374151" }}>User</span>
               <ChevronDown className="w-3.5 h-3.5" style={{ color: "#9CA3AF" }} />
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </header>

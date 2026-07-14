@@ -1,0 +1,21 @@
+-- Function to handle new user signups
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.users (id, full_name)
+  values (new.id, new.raw_user_meta_data->>'full_name');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- Trigger for new user signups
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- Backfill any existing users that don't have a profile
+insert into public.users (id, full_name)
+select id, raw_user_meta_data->>'full_name'
+from auth.users
+where id not in (select id from public.users);

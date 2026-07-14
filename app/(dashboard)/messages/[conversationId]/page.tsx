@@ -38,7 +38,9 @@ export default async function ConversationPage({ params }: PageProps) {
     );
   }
 
-  const otherUser = conversation.user_a.id === user.id ? conversation.user_b : conversation.user_a;
+  const userA: any = conversation.user_a;
+  const userB: any = conversation.user_b;
+  const otherUser = userA.id === user.id ? userB : userA;
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E8DDD0]">

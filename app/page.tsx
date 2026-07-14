@@ -207,8 +207,8 @@ export default function LandingPage() {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <Link href="/" className="text-gray-900 hover:text-gray-900 transition-colors">Home</Link>
           <Link href="/groups" className="hover:text-gray-900 transition-colors">Community</Link>
-          <Link href="#about" className="hover:text-gray-900 transition-colors">About us</Link>
-          <Link href="#features" className="hover:text-gray-900 transition-colors">Features</Link>
+          <Link href="/#about" className="hover:text-gray-900 transition-colors">About us</Link>
+          <Link href="/#features" className="hover:text-gray-900 transition-colors">Features</Link>
         </div>
 
         {/* Right actions */}
@@ -229,7 +229,7 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* ═══════════════════ HERO SECTION ═══════════════════ */}
-      <section className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 pt-10 md:pt-16 pb-8">
+      <section id="about" className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 pt-10 md:pt-16 pb-8">
         
         {/* Hero Text */}
         <motion.div
