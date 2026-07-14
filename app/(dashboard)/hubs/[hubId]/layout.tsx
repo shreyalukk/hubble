@@ -20,8 +20,8 @@ const members = [
 ];
 
 export default function HubLayout({ children, params }: { children: React.ReactNode, params: Promise<{ hubId: string }> }) {
-  const unwrappedParams = use(params);
   const pathname = usePathname();
+  const { hubId } = use(params);
 
   return (
     <div className="flex h-full border border-white/10 rounded-xl overflow-hidden bg-background">
@@ -42,7 +42,7 @@ export default function HubLayout({ children, params }: { children: React.ReactN
             return (
               <Link 
                 key={ch.id} 
-                href={`/hubs/${unwrappedParams.hubId}/channels/${ch.id}`}
+                href={`/hubs/${hubId}/channels/${ch.id}`}
                 className={cn(
                   "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm font-medium transition-colors",
                   isActive ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
