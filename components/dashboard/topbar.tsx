@@ -3,6 +3,8 @@
 import { Search, Bell, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const breadcrumbMap: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -16,6 +18,31 @@ const breadcrumbMap: Record<string, string> = {
 export function Topbar() {
   const pathname = usePathname();
   const pageTitle = breadcrumbMap[pathname] || "Hubble";
+
+  const [userName, setUserName] = useState("User");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("full_name, avatar_url")
+          .eq("id", user.id)
+          .single();
+        
+        if (profile?.full_name) {
+          setUserName(profile.full_name);
+        }
+        if (profile?.avatar_url) {
+          setUserAvatar(profile.avatar_url);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
 
   return (
     <header
@@ -61,14 +88,26 @@ export function Topbar() {
 
           {/* Profile */}
           <Link href="/settings" className="flex items-center gap-2.5 cursor-pointer group hover:opacity-80 transition-opacity">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-              style={{ backgroundColor: "#F5C542" }}
-            >
-              U
+            <div className="relative">
+              {userAvatar ? (
+                <img 
+                  src={userAvatar} 
+                  alt={userName} 
+                  className="w-8 h-8 rounded-full object-cover border border-gray-200" 
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ backgroundColor: "#F5C542" }}
+                >
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              {/* Online indicator */}
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
             </div>
             <div className="hidden sm:flex items-center gap-1">
-              <span className="text-sm font-medium" style={{ color: "#374151" }}>User</span>
+              <span className="text-sm font-medium" style={{ color: "#374151" }}>{userName}</span>
               <ChevronDown className="w-3.5 h-3.5" style={{ color: "#9CA3AF" }} />
             </div>
           </Link>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   ArrowRight,
   ArrowLeft,
@@ -28,7 +29,11 @@ const COLLEGES = [
   "Dayananda Sagar College of Engineering, Bangalore",
   "New Horizon College of Engineering, Bangalore",
   "Siddaganga Institute of Technology, Tumkur",
-  "B.M.S. Institute of Technology, Bangalore"
+  "B.M.S. Institute of Technology, Bangalore",
+  "BVB College of Engineering and Technology, Hubli",
+  "PC Jabin Science College, Hubli",
+  "SDM College of Engineering and Technology, Dharwad",
+  "KIMS Hubli"
 ];
 
 const STUDENT_DEPARTMENTS = [
@@ -220,12 +225,52 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleNext = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleNext = async () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // TODO: Save onboarding data to Supabase user profile
-      router.push("/dashboard");
+      setSubmitting(true);
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Look up or create college
+          let collegeId = null;
+          if (data.college) {
+            const { data: colData } = await supabase.from("colleges").select("id").eq("name", data.college).maybeSingle();
+            if (colData) {
+              collegeId = colData.id;
+            } else {
+              const { data: newCol } = await supabase
+                .from("colleges")
+                .insert({ name: data.college, domain: data.college.toLowerCase().replace(/[^a-z0-9]/g, "") + ".edu" })
+                .select()
+                .single();
+              if (newCol) collegeId = newCol.id;
+            }
+          }
+
+          const yearNumber = isStudent ? (parseInt(data.year) || 1) : null;
+          const userInterests = isStudent ? data.interests : data.subjects;
+
+          await supabase.from("users").upsert({
+            id: user.id,
+            role: data.role as "student" | "teacher",
+            college_id: collegeId,
+            year_of_study: yearNumber,
+            interests: userInterests,
+            updated_at: new Date().toISOString(),
+          });
+        }
+        router.push("/dashboard");
+      } catch (err) {
+        console.error("Error saving onboarding details:", err);
+        router.push("/dashboard");
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 

@@ -5,11 +5,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, GraduationCap, BookOpen, Check } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"student" | "teacher">("student");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function LoginPage() {
 
     const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -29,8 +30,28 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
-      router.push("/onboarding");
+      return;
+    }
+
+    if (authData.user) {
+      // Update/Ensure role in profile table
+      await supabase
+        .from("users")
+        .update({ role })
+        .eq("id", authData.user.id);
+
+      // Check if profile details are already set up
+      const { data: profile } = await supabase
+        .from("users")
+        .select("department_id, year_of_study, college_id")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (!profile || !profile.college_id) {
+        router.push("/onboarding");
+      } else {
+        router.push("/dashboard");
+      }
     }
   };
 
@@ -39,85 +60,128 @@ export default function LoginPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="max-w-md mx-auto"
     >
       {/* Logo */}
       <div className="flex items-center justify-center gap-2 mb-8">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#2D2D2D" }}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#2D2D2D]">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="currentColor">
             <circle cx="12" cy="12" r="4" />
             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
         </div>
-        <span className="text-xl font-bold tracking-tight" style={{ color: "#1a1a1a" }}>hubble</span>
+        <span className="text-xl font-bold tracking-tight text-[#1a1a1a]">hubble</span>
       </div>
 
       {/* Card */}
-      <div className="bg-white rounded-2xl shadow-xl border p-8" style={{ borderColor: "#E8DDD0" }}>
+      <div className="bg-white rounded-2xl shadow-xl border border-[#E8DDD0] p-8">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#1a1a1a" }}>
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold tracking-tight mb-2 text-[#1a1a1a]">
             Welcome back
           </h1>
-          <p className="text-sm" style={{ color: "#6b7280" }}>
-            Enter your college email to sign in to your account
+          <p className="text-sm text-gray-500">
+            Sign in as a Student or Teacher to access your campus portal
           </p>
         </div>
 
+        {/* Role Selector Tabs */}
+        <div className="grid grid-cols-2 gap-3 mb-6 p-1 bg-gray-100 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setRole("student")}
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+              role === "student"
+                ? "bg-[#2D2D2D] text-white shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <GraduationCap className="w-4 h-4 text-[#F5C542]" />
+            <span>Student Login</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRole("teacher")}
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+              role === "teacher"
+                ? "bg-[#2D2D2D] text-white shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <BookOpen className="w-4 h-4 text-[#4285F4]" />
+            <span>Teacher Login</span>
+          </button>
+        </div>
+
+        {/* Role Banner */}
+        <div
+          className={`p-3 rounded-xl mb-6 text-xs flex items-center gap-2 border ${
+            role === "teacher"
+              ? "bg-blue-50 border-blue-200 text-blue-800"
+              : "bg-amber-50 border-amber-200 text-amber-900"
+          }`}
+        >
+          {role === "teacher" ? (
+            <>
+              <BookOpen className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>
+                <strong>Teacher Account:</strong> Create events, monitor coordinators & manage campus communities.
+              </span>
+            </>
+          ) : (
+            <>
+              <GraduationCap className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Student Account:</strong> Join events, participate in groups & connect with peers.
+              </span>
+            </>
+          )}
+        </div>
+
         {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-4">
           {error && (
-            <div className="p-3 text-sm rounded-lg" style={{ backgroundColor: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
+            <div className="p-3 text-xs rounded-lg bg-red-50 border border-red-200 text-red-700">
               {error}
             </div>
           )}
 
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium" style={{ color: "#374151" }}>Email</label>
+          <div className="space-y-1.5">
+            <label htmlFor="email" className="text-xs font-semibold text-gray-700">
+              {role === "teacher" ? "Faculty / Institutional Email" : "Student Email"}
+            </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9CA3AF" }} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 id="email"
                 type="email"
-                placeholder="student@college.edu"
+                placeholder={role === "teacher" ? "professor@college.edu" : "student@college.edu"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-11 pl-10 pr-4 rounded-xl text-sm outline-none transition-all duration-200"
-                style={{ 
-                  backgroundColor: "#FAF6F0", 
-                  border: "1.5px solid #E8DDD0", 
-                  color: "#1a1a1a" 
-                }}
-                onFocus={(e) => e.target.style.borderColor = "#F5C542"}
-                onBlur={(e) => e.target.style.borderColor = "#E8DDD0"}
+                className="w-full h-11 pl-10 pr-4 rounded-xl text-sm outline-none bg-[#FAF6F0] border border-[#E8DDD0] text-[#1a1a1a] focus:border-[#F5C542] transition-all"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium" style={{ color: "#374151" }}>Password</label>
-              <Link href="/forgot-password" className="text-xs font-medium hover:underline" style={{ color: "#F5C542" }}>
+              <label htmlFor="password" className="text-xs font-semibold text-gray-700">Password</label>
+              <Link href="/forgot-password" className="text-xs font-medium text-[#F5C542] hover:underline">
                 Forgot password?
               </Link>
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9CA3AF" }} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full h-11 pl-10 pr-4 rounded-xl text-sm outline-none transition-all duration-200"
-                style={{ 
-                  backgroundColor: "#FAF6F0", 
-                  border: "1.5px solid #E8DDD0", 
-                  color: "#1a1a1a" 
-                }}
-                onFocus={(e) => e.target.style.borderColor = "#F5C542"}
-                onBlur={(e) => e.target.style.borderColor = "#E8DDD0"}
+                className="w-full h-11 pl-10 pr-4 rounded-xl text-sm outline-none bg-[#FAF6F0] border border-[#E8DDD0] text-[#1a1a1a] focus:border-[#F5C542] transition-all"
               />
             </div>
           </div>
@@ -125,19 +189,18 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: "#2D2D2D" }}
+            className="w-full h-11 rounded-xl text-sm font-semibold text-white bg-[#2D2D2D] hover:bg-gray-800 flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-xs"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : `Sign in as ${role === "teacher" ? "Teacher" : "Student"}`}
             {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px" style={{ backgroundColor: "#E8DDD0" }} />
-          <span className="text-xs" style={{ color: "#9CA3AF" }}>or</span>
-          <div className="flex-1 h-px" style={{ backgroundColor: "#E8DDD0" }} />
+          <div className="flex-1 h-px bg-[#E8DDD0]" />
+          <span className="text-xs text-gray-400">or</span>
+          <div className="flex-1 h-px bg-[#E8DDD0]" />
         </div>
 
         {/* Google OAuth */}
@@ -150,8 +213,7 @@ export default function LoginPage() {
               options: { redirectTo: `${window.location.origin}/auth/callback` },
             });
           }}
-          className="w-full h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-3 transition-all duration-200 hover:shadow-md"
-          style={{ backgroundColor: "#FFFFFF", border: "1.5px solid #E8DDD0", color: "#374151" }}
+          className="w-full h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-3 bg-white border border-[#E8DDD0] text-gray-700 hover:shadow-sm transition-all"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -163,9 +225,9 @@ export default function LoginPage() {
         </button>
 
         {/* Footer */}
-        <p className="text-sm text-center mt-6" style={{ color: "#6b7280" }}>
+        <p className="text-sm text-center mt-6 text-gray-500">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-semibold hover:underline" style={{ color: "#1a1a1a" }}>
+          <Link href="/signup" className="font-semibold text-[#1a1a1a] hover:underline">
             Sign up
           </Link>
         </p>

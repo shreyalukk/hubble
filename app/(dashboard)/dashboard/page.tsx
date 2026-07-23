@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Users, MessageSquare, Calendar, Plus, ArrowRight, TrendingUp, BookOpen } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
 const quickActions = [
   { icon: Users, label: "Browse Groups", href: "/groups", color: "#F5C542" },
@@ -8,19 +9,40 @@ const quickActions = [
   { icon: Plus, label: "Create Hub", href: "/hubs/new", color: "#EA4335" },
 ];
 
-const stats = [
-  { label: "Communities Joined", value: "3", icon: Users },
-  { label: "Messages Sent", value: "24", icon: MessageSquare },
-  { label: "Events This Week", value: "2", icon: Calendar },
-];
-
 const recentGroups = [
   { name: "Computer Science 101", members: 142, type: "PUBLIC" },
   { name: "Photography Club", members: 58, type: "PUBLIC" },
   { name: "Startup Founders", members: 34, type: "PRIVATE" },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  let communitiesCount = 0;
+  let upcomingEvents: any[] = [];
+  
+  if (user) {
+    const { count } = await supabase
+      .from("user_communities")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+    communitiesCount = count || 0;
+
+    const { data: events } = await supabase
+      .from("events")
+      .select("*")
+      .order("start_time", { ascending: true })
+      .limit(3);
+    upcomingEvents = events || [];
+  }
+
+  const stats = [
+    { label: "Communities Joined", value: communitiesCount.toString(), icon: Users, href: "/groups" },
+    { label: "Messages Sent", value: "24", icon: MessageSquare, href: "/messages" },
+    { label: "Events This Week", value: "2", icon: Calendar, href: "/events" },
+  ];
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       
@@ -61,13 +83,14 @@ export default function DashboardPage() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div
+            <Link
               key={stat.label}
-              className="rounded-2xl p-5 flex items-center gap-4 transition-all duration-200 hover:shadow-md"
+              href={stat.href}
+              className="rounded-2xl p-5 flex items-center gap-4 transition-all duration-200 hover:shadow-md cursor-pointer"
               style={{ backgroundColor: "#FFFFFF", border: "1px solid #E8DDD0" }}
             >
               <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center"
+                className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform hover:scale-105"
                 style={{ backgroundColor: "#FFF9E6" }}
               >
                 <Icon className="w-5 h-5" style={{ color: "#D4A017" }} />
@@ -76,7 +99,7 @@ export default function DashboardPage() {
                 <div className="text-2xl font-bold" style={{ color: "#1a1a1a" }}>{stat.value}</div>
                 <div className="text-xs font-medium" style={{ color: "#9CA3AF" }}>{stat.label}</div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -109,40 +132,76 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Groups */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold" style={{ color: "#1a1a1a" }}>Your Groups</h2>
-          <Link href="/groups" className="text-sm font-medium flex items-center gap-1 hover:underline" style={{ color: "#D4A017" }}>
-            View all <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-        <div className="space-y-3">
-          {recentGroups.map((group) => (
-            <Link
-              key={group.name}
-              href="/groups"
-              className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:shadow-md group"
-              style={{ backgroundColor: "#FFFFFF", border: "1px solid #E8DDD0" }}
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
-                  style={{ backgroundColor: "#FFF9E6", color: "#D4A017" }}
-                >
-                  {group.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>{group.name}</div>
-                  <div className="text-xs" style={{ color: "#9CA3AF" }}>
-                    {group.members} members • {group.type}
+      {/* Two Column Layout: Groups & Events */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* Recent Groups */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold" style={{ color: "#1a1a1a" }}>Your Groups</h2>
+            <Link href="/groups" className="text-sm font-medium flex items-center gap-1 hover:underline" style={{ color: "#D4A017" }}>
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {recentGroups.map((group) => (
+              <Link
+                key={group.name}
+                href="/groups"
+                className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:shadow-md group"
+                style={{ backgroundColor: "#FFFFFF", border: "1px solid #E8DDD0" }}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+                    style={{ backgroundColor: "#FFF9E6", color: "#D4A017" }}
+                  >
+                    {group.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>{group.name}</div>
+                    <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                      {group.members} members • {group.type}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "#9CA3AF" }} />
-            </Link>
-          ))}
+                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "#9CA3AF" }} />
+              </Link>
+            ))}
+          </div>
         </div>
+
+        {/* Upcoming Events */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold" style={{ color: "#1a1a1a" }}>Upcoming Events</h2>
+            <Link href="/events" className="text-sm font-medium flex items-center gap-1 hover:underline" style={{ color: "#34A853" }}>
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {upcomingEvents.length > 0 ? (
+              upcomingEvents.map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className="flex flex-col p-4 rounded-2xl transition-all duration-200 hover:shadow-md group"
+                  style={{ backgroundColor: "#FFFFFF", border: "1px solid #E8DDD0" }}
+                >
+                  <div className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>{event.title}</div>
+                  <div className="text-xs mt-1" style={{ color: "#6b7280" }}>
+                    {new Date(event.start_time).toLocaleDateString()} at {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="p-6 text-center rounded-2xl" style={{ backgroundColor: "#FFFFFF", border: "1px dashed #E8DDD0" }}>
+                <p className="text-sm text-gray-500">No upcoming events.</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
       </div>
 
       {/* Footer */}

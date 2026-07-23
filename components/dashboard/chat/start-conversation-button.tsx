@@ -3,18 +3,24 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Lock } from "lucide-react";
 
 interface StartConversationButtonProps {
   otherUserId: string;
   currentUserId: string;
+  isOnline?: boolean;
 }
 
-export function StartConversationButton({ otherUserId, currentUserId }: StartConversationButtonProps) {
+export function StartConversationButton({ 
+  otherUserId, 
+  currentUserId,
+  isOnline = true
+}: StartConversationButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleStart = async () => {
+    if (!isOnline) return;
     setIsLoading(true);
     const supabase = createClient();
 
@@ -53,14 +59,28 @@ export function StartConversationButton({ otherUserId, currentUserId }: StartCon
     }
   };
 
+  if (!isOnline) {
+    return (
+      <button
+        disabled
+        className="p-2 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed flex items-center gap-1.5 text-xs"
+        title="Only logged-in users can receive messages"
+      >
+        <Lock className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">Offline</span>
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={handleStart}
       disabled={isLoading}
-      className="p-2 rounded-lg bg-[#FAF6F0] hover:bg-[#E8DDD0] transition-colors text-gray-700 disabled:opacity-50"
-      title="Message"
+      className="p-2 px-3 rounded-lg bg-[#F5C542] hover:bg-[#e5b532] transition-colors text-white font-medium text-xs flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+      title="Message logged-in user"
     >
       <MessageSquare className="w-4 h-4" />
+      <span>Message</span>
     </button>
   );
 }

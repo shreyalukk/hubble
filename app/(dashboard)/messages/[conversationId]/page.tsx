@@ -1,8 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { ChatWindow } from "@/components/dashboard/chat/chat-window";
 import { redirect } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { ConversationClient } from "./conversation-client";
 
 interface PageProps {
   params: Promise<{
@@ -19,7 +17,7 @@ export default async function ConversationPage({ params }: PageProps) {
     redirect("/login");
   }
 
-  // Fetch the conversation to get the other user's name
+  // Fetch the conversation to get the other user's info
   const { data: conversation } = await supabase
     .from("conversations")
     .select(`
@@ -32,8 +30,8 @@ export default async function ConversationPage({ params }: PageProps) {
 
   if (!conversation) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p>Conversation not found.</p>
+      <div className="flex-1 flex items-center justify-center p-8">
+        <p className="text-gray-500 text-sm">Conversation not found.</p>
       </div>
     );
   }
@@ -43,25 +41,10 @@ export default async function ConversationPage({ params }: PageProps) {
   const otherUser = userA.id === user.id ? userB : userA;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E8DDD0]">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-[#E8DDD0] bg-white">
-        <Link href="/messages" className="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
-          <ChevronLeft className="w-5 h-5" />
-        </Link>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white bg-[#F5C542]">
-          {otherUser.full_name?.charAt(0) || "U"}
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-[#1a1a1a]">{otherUser.full_name || "Unknown User"}</h2>
-          <p className="text-xs text-gray-500">Active</p>
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="flex-1 overflow-hidden">
-        <ChatWindow conversationId={conversationId} currentUserId={user.id} />
-      </div>
-    </div>
+    <ConversationClient
+      conversationId={conversationId}
+      currentUserId={user.id}
+      otherUser={otherUser}
+    />
   );
 }
