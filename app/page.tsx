@@ -244,10 +244,12 @@ export default function LandingPage() {
           >
             Hey there! having{" "}
             <br className="hidden sm:block" />
-            trouble making{" "}
-            <span className="relative inline-block">
-              <span className="relative z-10">friends?</span>
-              <span className="absolute bottom-1 left-0 w-full h-3 bg-[#F5C542] opacity-50 rounded-sm -z-0" />
+            <span className="whitespace-nowrap">
+              trouble making{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">friends?</span>
+                <span className="absolute bottom-1 left-0 w-full h-3 bg-[#F5C542] opacity-50 rounded-sm -z-0" />
+              </span>
             </span>
           </motion.h1>
 
