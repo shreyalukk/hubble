@@ -28,7 +28,7 @@ export default async function OnboardingCommunitiesPage() {
 
   if (userCommunities && userCommunities.length > 0) {
     // User already completed onboarding
-    redirect("/home");
+    redirect("/dashboard");
   }
 
   return (
