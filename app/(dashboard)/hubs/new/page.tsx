@@ -57,8 +57,13 @@ export default function CreateHubPage() {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase.from("users").select("college_id").eq("id", user.id).single();
-        if (profile) setCollegeId(profile.college_id);
+        const { data: profile } = await supabase.from("users").select("college_id").eq("id", user.id).maybeSingle();
+        if (profile?.college_id) {
+          setCollegeId(profile.college_id);
+        } else {
+          const { data: firstCol } = await supabase.from("colleges").select("id").limit(1).maybeSingle();
+          if (firstCol?.id) setCollegeId(firstCol.id);
+        }
       }
 
       const { data: comms } = await supabase.from("communities").select("*");
@@ -83,11 +88,15 @@ export default function CreateHubPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!collegeId) {
-      alert("You must be assigned to a college to create a hub.");
-      return;
-    }
     
+    let targetCollegeId = collegeId;
+    if (!targetCollegeId) {
+      const { data: firstCol } = await supabase.from("colleges").select("id").limit(1).maybeSingle();
+      if (firstCol?.id) {
+        targetCollegeId = firstCol.id;
+      }
+    }
+
     if ((privacy === "private" || privacy === "passcode_protected") && !passcode.trim()) {
       alert("Please specify or generate a passcode for this private group.");
       return;
@@ -113,7 +122,7 @@ export default function CreateHubPage() {
             privacy,
             passcode: finalPasscode,
             category: category || "General",
-            college_id: collegeId,
+            college_id: targetCollegeId,
             created_by: user.id
           }
         ])
